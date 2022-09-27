@@ -1,8 +1,16 @@
 /// Gear hash table.
 pub type Table = [u64; 256];
 
-/// Default hash table, using random (but static) integers.
-pub static DEFAULT_TABLE: Table = [
+macro_rules! gen_table {
+    [$($val:literal),* $(,)?] => {
+        /// Default hash table, using random (but static) integers.
+        pub static DEFAULT_TABLE: Table = [$($val),+];
+        /// [`DEFAULT_TABLE`] left shifted by 1 for the "twobyte" implementation.
+        pub static DEFAULT_TABLE_LS: Table = [$($val << 1),+];
+    };
+}
+
+gen_table! [
     0xb088d3a9e840f559,
     0x5652c7f739ed20d6,
     0x45b28969898972ab,

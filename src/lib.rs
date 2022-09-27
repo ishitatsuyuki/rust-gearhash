@@ -44,7 +44,7 @@ mod table;
 #[cfg(fuzzing)]
 pub mod fuzzing;
 
-pub use table::{Table, DEFAULT_TABLE};
+pub use table::{Table, DEFAULT_TABLE, DEFAULT_TABLE_LS};
 
 /// Gear hash state. Processes bytes to find chunk boundaries.
 #[derive(Clone)]
