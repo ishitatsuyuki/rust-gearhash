@@ -17,6 +17,7 @@ fn add_sh(a: u64, b: u64) -> u64 {
 fn add_sh2(a: u64, b: u64) -> u64 {
     let out: u64;
     unsafe {
+        #[cfg(target_arch = "x86_64")]
         asm!("lea {0}, [{1} + {2} * 4]", lateout(reg) out, in(reg) b, in(reg) a);
         #[cfg(target_arch = "aarch64")]
         asm!("add {0}, {1}, {2}, lsl #2", lateout(reg) out, in(reg) b, in(reg) a);
