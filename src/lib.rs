@@ -1,3 +1,4 @@
+#![feature(slice_as_chunks)]
 //! The GEAR hashing function is a fast, rolling hash function that
 //! is well suited for content defined chunking. In particular, it is
 //! used as a building block for the [FastCDC](https://www.usenix.org/node/196197)

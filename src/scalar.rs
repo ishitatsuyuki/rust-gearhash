@@ -1,4 +1,5 @@
 use std::arch::asm;
+
 use crate::Table;
 
 #[inline]
@@ -43,36 +44,44 @@ pub fn next_match(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -> Optio
 
 #[inline]
 pub fn next_match2(hash: &mut u64, table: &Table, buf: &[u8], mask: u64) -> Option<usize> {
-    let mut hash_ = *hash;
+    let mut h = *hash;
     let len = buf.len();
-    for i in 0..len / 2 {
-        let hash_orig = hash_;
-        let b2 = unsafe { table[*buf.get_unchecked(i * 2 + 1) as usize] };
-        let b1 = unsafe { table[*buf.get_unchecked(i * 2) as usize] };
+    let (chunks, remainder) = buf.as_chunks::<4>();
+    for (i, &[b1, b2, b3, b4]) in chunks.iter().enumerate() {
+        let hash_orig = h;
+        let b1 = table[b1 as usize];
+        let b2 = table[b2 as usize];
+        let b3 = table[b3 as usize];
+        let b4 = table[b4 as usize];
 
-        hash_ = add_sh(hash_orig, b1);
+        h = add_sh(hash_orig, b1);
         let b1b2 = add_sh(b1, b2);
-        if hash_ & mask == 0 {
-            *hash = hash_;
-            return Some(i * 2 + 1);
+        if h & mask == 0 {
+            *hash = h;
+            return Some(i * 4 + 1);
         }
-        hash_ = add_sh2(hash_orig, b1b2);
-        if hash_ & mask == 0 {
-            *hash = hash_;
-            return Some(i * 2 + 2);
+        h = add_sh2(hash_orig, b1b2);
+        if h & mask == 0 {
+            *hash = h;
+            return Some(i * 4 + 2);
+        }
+
+        let hash_orig = h;
+
+        h = add_sh(hash_orig, b3);
+        let b1b2 = add_sh(b3, b4);
+        if h & mask == 0 {
+            *hash = h;
+            return Some(i * 4 + 3);
+        }
+        h = add_sh2(hash_orig, b1b2);
+        if h & mask == 0 {
+            *hash = h;
+            return Some(i * 4 + 4);
         }
     }
-    if len % 2 == 1 {
-        hash_ = (hash_ << 1).wrapping_add(unsafe { table[*buf.get_unchecked(len - 1) as usize] });
-
-        if hash_ & mask == 0 {
-            *hash = hash_;
-            return Some(len);
-        }
-    }
-
-    *hash = hash_;
-    None
+    *hash = h;
+    next_match(hash, table, remainder, mask).map(|i| i + chunks.len() * 4)
 }
 
 #[cfg(test)]
